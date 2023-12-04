@@ -1,6 +1,5 @@
 ﻿using RabbitMQ.Client;
 using System;
-using System.Runtime.CompilerServices;
 
 namespace RabbitMQRedirectAssembly
 {
@@ -8,6 +7,11 @@ namespace RabbitMQRedirectAssembly
     {
         static void Main(string[] args)
         {
+            if (args is null)
+            {
+                throw new ArgumentNullException(nameof(args));
+            }
+
             ConnectionFactory factory = new ConnectionFactory()
             {
                 HostName = "localhost",
@@ -21,11 +25,25 @@ namespace RabbitMQRedirectAssembly
                 RequestedChannelMax = 10000,
             };
 
-
-            var connection = factory.CreateConnection();
+            try
+            {
+                var connection = factory.CreateConnection();
+                connection.ConnectionShutdown += Connection_ConnectionShutdown;
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine("Exception: {0}", ex);
+                Environment.Exit(1);
+            }
 
             Console.WriteLine("CONNECTED");
             Console.ReadKey();
+        }
+
+        private static void Connection_ConnectionShutdown(object sender, ShutdownEventArgs e)
+        {
+            Console.WriteLine("ConnectionShutdown sender: {0}", sender.ToString());
+            Console.WriteLine("ConnectionShutdown event args: {0}", e);
         }
     }
 }
